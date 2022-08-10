@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>corp.sap.privileges.remove</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>#CLIPATH#</string>
+		<string>--remove</string>
+	</array>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Day</key>
+		<integer>111</integer>
+		<key>Hour</key>
+		<integer>222</integer>
+		<key>Minute</key>
+		<integer>333</integer>
+		<key>Month</key>
+		<integer>444</integer>
+	</dict>
+</dict>
+</plist>

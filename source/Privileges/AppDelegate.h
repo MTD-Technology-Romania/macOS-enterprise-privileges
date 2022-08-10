@@ -18,5 +18,5 @@
 #import <Cocoa/Cocoa.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSUserNotificationCenterDelegate, NSTextFieldDelegate>
-
+-(void)installLaunchAgentToRemovePrivileges;
 @end

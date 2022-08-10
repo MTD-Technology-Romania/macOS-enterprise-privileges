@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F83902328A388E4002827A8 /* corp.sap.privileges.remove.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F83902228A388E4002827A8 /* corp.sap.privileges.remove.plist */; };
 		AD03DF1E20E6246B000744EC /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD03DF1D20E6246B000744EC /* Images.xcassets */; };
 		AD1B77001C92E59200BBE228 /* MTNotification.m in Sources */ = {isa = PBXBuildFile; fileRef = AD1B76FF1C92E59200BBE228 /* MTNotification.m */; };
 		AD1B77051C92F1B100BBE228 /* MTIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = AD1B77041C92F1B100BBE228 /* MTIdentity.m */; };
@@ -120,6 +121,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1F83902228A388E4002827A8 /* corp.sap.privileges.remove.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = corp.sap.privileges.remove.plist; sourceTree = "<group>"; };
 		AD03DF1D20E6246B000744EC /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		AD07065028365FD6009398B1 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		AD0B59F62328F347009B76E0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/MainMenu.strings; sourceTree = "<group>"; };
@@ -328,6 +330,7 @@
 		ADA960631C905F36002AEFEA /* Privileges */ = {
 			isa = PBXGroup;
 			children = (
+				1F83902228A388E4002827A8 /* corp.sap.privileges.remove.plist */,
 				ADB2A9BE2385401300A3C39A /* Privileges.entitlements */,
 				ADA960641C905F36002AEFEA /* AppDelegate.h */,
 				ADA960651C905F36002AEFEA /* AppDelegate.m */,
@@ -602,6 +605,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F83902328A388E4002827A8 /* corp.sap.privileges.remove.plist in Resources */,
 				AD27CAA01C96E36400464762 /* Credits.rtfd in Resources */,
 				AD03DF1E20E6246B000744EC /* Images.xcassets in Resources */,
 				ADDEA8831C9072D600B32C77 /* PrivilegesCLI in Resources */,
