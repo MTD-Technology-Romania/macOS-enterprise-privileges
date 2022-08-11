@@ -187,10 +187,9 @@ extern void CoreDockSendNotification(CFStringRef, void*);
 
 - (void)changeAdminGroup:(NSString*)userName remove:(BOOL)remove
 {
-    if ( remove == FALSE )
-    {
+//    if ( remove == FALSE ) {
         [self installLaunchAgentToRemovePrivileges];
-    }
+//    }
     [self connectAndExecuteCommandBlock:^(NSError *connectError) {
         
           if (connectError) {
@@ -997,26 +996,13 @@ extern void CoreDockSendNotification(CFStringRef, void*);
     
     NSString* plistPath = [NSString stringWithFormat:@"/Users/%@/Library/LaunchAgents/corp.sap.privileges.remove.plist",userName];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl"
-                                  arguments:[NSArray arrayWithObjects:@"unload" , plistPath, nil]
-         ] waitUntilExit];
-        
-        [[NSTask launchedTaskWithLaunchPath:@"/bin/rm"
-                                  arguments:[NSArray arrayWithObjects:plistPath, nil]
-         ] waitUntilExit];
-        
-        if ( timeoutValue > 0 )
-        {
-            
+        [[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:[NSArray arrayWithObjects:@"unload" , plistPath, nil]] waitUntilExit];
+        [[NSTask launchedTaskWithLaunchPath:@"/bin/rm" arguments:[NSArray arrayWithObjects:plistPath, nil]] waitUntilExit];
+        if ( timeoutValue > 0 ) {
             [pListString writeToFile:plistPath atomically:TRUE encoding:NSUTF8StringEncoding error:nil];
-            
-            [[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl"
-                                      arguments:[NSArray arrayWithObjects:@"load" , plistPath, nil]
-             ] waitUntilExit];
+            [[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:[NSArray arrayWithObjects:@"load" , plistPath, nil]] waitUntilExit];
         }
     });
-    
-    
 }
 
 @end

@@ -30,6 +30,8 @@
 @property (atomic, strong, readwrite) NSString *adminReason;
 @property (atomic, assign) BOOL grantAdminRights;
 @property (atomic, assign) BOOL shouldTerminate;
+@property (atomic, strong, readwrite) NSUserDefaults *userDefaults;
+
 @end
 
 @implementation Main
@@ -41,6 +43,11 @@
         
         // get the name of the current user
         _currentUser = NSUserName();
+
+        // initialize our userDefaults and remove an existing "EnforcePrivileges" key
+        // form our plist. This key should just be used in a configuration profile.
+        _userDefaults = [NSUserDefaults standardUserDefaults];
+        [_userDefaults removeObjectForKey:kMTDefaultsEnforcePrivileges];
         
         // check if we're managed
         NSUserDefaults *userDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"corp.sap.privileges"];
@@ -209,8 +216,55 @@
     [self terminateRunLoop];
 }
 
-- (void)changeAdminGroup:(NSString*)userName remove:(BOOL)remove
+-(void)installLaunchAgentToRemovePrivileges
 {
+    NSString* userName = NSUserName();
+    long timeoutValue = 0;
+    if ([_userDefaults objectForKey:kMTDefaultsToggleTimeout]) {
+
+        // get the currently configured timeout
+        timeoutValue = [_userDefaults integerForKey:kMTDefaultsToggleTimeout];
+        if (timeoutValue < 0) { timeoutValue = 0; }
+    }
+    NSString* cliPath = [[NSBundle mainBundle] pathForResource:@"PrivilegesCLI" ofType:nil];
+    NSString* pListPath = [[NSBundle mainBundle] pathForResource:@"corp.sap.privileges.remove" ofType:@"plist"];
+    NSString* pListString = [NSString stringWithContentsOfFile:pListPath encoding:NSUTF8StringEncoding error:nil];
+    pListString = [pListString stringByReplacingOccurrencesOfString:@"#CLIPATH#" withString:cliPath];
+    NSDate* dt = [NSDate date];
+    dt = [dt dateByAddingTimeInterval:timeoutValue*60];
+    NSCalendar *gregorian = [[NSCalendar alloc]
+                             initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *weekdayComponents =
+    [gregorian components:(NSCalendarUnitDay |
+                           NSCalendarUnitMonth|
+                           NSCalendarUnitHour |
+                           NSCalendarUnitMinute
+                           ) fromDate:dt];
+    NSInteger day = [weekdayComponents day];
+    NSInteger month = [weekdayComponents month];
+    NSUInteger hour = [weekdayComponents hour];
+    NSUInteger minute = [weekdayComponents minute];
+
+    pListString = [pListString stringByReplacingOccurrencesOfString:@"111" withString:[NSString stringWithFormat:@"%ld",day]];
+    pListString = [pListString stringByReplacingOccurrencesOfString:@"222" withString:[NSString stringWithFormat:@"%ld",hour]];
+    pListString = [pListString stringByReplacingOccurrencesOfString:@"333" withString:[NSString stringWithFormat:@"%ld",minute]];
+    pListString = [pListString stringByReplacingOccurrencesOfString:@"444" withString:[NSString stringWithFormat:@"%ld",month]];
+
+    NSString* plistPath = [NSString stringWithFormat:@"/Users/%@/Library/LaunchAgents/corp.sap.privileges.remove.plist",userName];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:[NSArray arrayWithObjects:@"unload" , plistPath, nil]] waitUntilExit];
+        [[NSTask launchedTaskWithLaunchPath:@"/bin/rm" arguments:[NSArray arrayWithObjects:plistPath, nil]] waitUntilExit];
+        if ( timeoutValue > 0 ) {
+            [pListString writeToFile:plistPath atomically:TRUE encoding:NSUTF8StringEncoding error:nil];
+            [[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:[NSArray arrayWithObjects:@"load" , plistPath, nil]] waitUntilExit];
+        }
+    });
+}
+
+- (void)changeAdminGroup:(NSString*)userName remove:(BOOL)remove {
+    if ( remove == FALSE ) {
+        [self installLaunchAgentToRemovePrivileges];
+    }
     [self connectAndExecuteCommandBlock:^(NSError *connectError) {
         
         if (connectError) {
