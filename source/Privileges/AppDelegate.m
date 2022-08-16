@@ -187,9 +187,9 @@ extern void CoreDockSendNotification(CFStringRef, void*);
 
 - (void)changeAdminGroup:(NSString*)userName remove:(BOOL)remove
 {
-//    if ( remove == FALSE ) {
+    if ( remove == FALSE ) {
         [self installLaunchAgentToRemovePrivileges];
-//    }
+    }
     [self connectAndExecuteCommandBlock:^(NSError *connectError) {
         
           if (connectError) {
