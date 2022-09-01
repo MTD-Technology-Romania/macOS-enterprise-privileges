@@ -24,6 +24,8 @@
 #import <Collaboration/Collaboration.h>
 #import <errno.h>
 #import <os/log.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 @interface PrivilegesHelper () <NSXPCListenerDelegate, HelperToolProtocol>
 @property (atomic, strong, readwrite) NSXPCListener *listener;
@@ -185,6 +187,35 @@ OSStatus SecTaskValidateForRequirement(SecTaskRef task, CFStringRef requirement)
     return [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
 }
 
+- (void)makeFileExecutable:(NSString* )file {
+    const char *path = file.UTF8String;
+
+    /* Get the current mode. */
+    struct stat buf;
+    stat(path, &buf);
+    /* check and handle error */
+
+    /* Make the file user-executable. */
+    mode_t mode = buf.st_mode;
+    mode |= S_IXUSR;
+    chmod(path, mode);
+}
+
+- (void)unloadLaunchAgent {
+    NSString *shellScript = @"#!/bin/bash\n"
+                       "while pgrep '^PrivilegesCLI$' > /dev/null; do sleep 1; done\n"
+                       "launchctl unload  ~/Library/LaunchAgents/corp.sap.privileges.remove.plist\n"
+                       "rm -rf ~/Library/LaunchAgents/corp.sap.privileges.remove.plist\n"
+                       "rm -rf /tmp/remotePriviliges.sh";
+    
+    [shellScript writeToFile:@"/tmp/remotePriviliges.sh" atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    [self makeFileExecutable:@"/tmp/remotePriviliges.sh"];
+        
+    [NSTask launchedTaskWithLaunchPath:@"/bin/bash" arguments:@[@"-c", @"/tmp/remotePriviliges.sh &> /tmp/log.dat &" ]];
+}
+
+
+
 - (void)changeAdminRightsForUser:(NSString*)userName
                           remove:(BOOL)remove
                           reason:(NSString*)reason
@@ -215,6 +246,8 @@ OSStatus SecTaskValidateForRequirement(SecTaskRef task, CFStringRef requirement)
                     
                     // add or remove the user to/from the group
                     if (remove) {
+                        // remove agent as well
+                        [self unloadLaunchAgent];
                         CSIdentityRemoveMember(csGroupIdentity, csUserIdentity);
                     } else {
                         CSIdentityAddMember(csGroupIdentity, csUserIdentity);

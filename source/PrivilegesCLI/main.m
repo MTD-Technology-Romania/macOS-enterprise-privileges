@@ -75,7 +75,19 @@
                 lastArgument = [theArguments lastObject];
                 [self sendConsoleMessage:[NSString stringWithFormat:@"Arguments are ignored because %@ rights have been assigned by an administrator", ([enforcedPrivileges isEqualToString:@"admin"]) ? @"admin" : @"standard user"]];
             }
-
+            
+            // making sure that we have hit the timeline before removing users priviliges
+            if ([theArguments count] == 2 && ([lastArgument isEqualToString:@"--remove"])) {
+                if (![self isPriviligeTimePast]) {
+                    // if we haven't reached out our limit. we should stop executing CLI
+                    [self sendConsoleMessage:@"Time has not yet reached to remove priviliges"];
+              
+                    exit(0);
+                } else {
+                    [self sendConsoleMessage:@"Allowed time for priviliges has expired"];
+                }
+            }
+            
             if ([theArguments count] == 2 && ([lastArgument isEqualToString:@"--remove"] || [lastArgument isEqualToString:@"--add"])) {
                 
                 if ([enforcedPrivileges isEqualToString:@"none"] || (!enforcedPrivileges &&
@@ -214,6 +226,43 @@
     fprintf(stderr, "             --status     Displays the current user's privileges\n\n");
     
     [self terminateRunLoop];
+}
+
+// function to determine if we have reached out time to remove priviliges.
+-(BOOL)isPriviligeTimePast {
+    NSString* plistPath = [NSString stringWithFormat:@"/Users/%@/Library/LaunchAgents/corp.sap.privileges.remove.plist",NSUserName()];
+
+    if ([[NSFileManager defaultManager] fileExistsAtPath:plistPath]) {
+        NSDictionary *plistDictionary = [NSDictionary dictionaryWithContentsOfFile:plistPath];
+        if (plistDictionary != nil) {
+            NSDictionary<NSString *, NSNumber *> *startInterval = plistDictionary[@"StartCalendarInterval"];
+            if (startInterval != nil) {
+                NSInteger day = startInterval[@"Day"].integerValue;
+                NSInteger month = startInterval[@"Month"].integerValue;
+                NSInteger hour = startInterval[@"Hour"].integerValue;
+                NSInteger minute = startInterval[@"Minute"].integerValue;
+                
+                NSDate* currentDate = [NSDate date];
+                NSCalendar *gregorian = [[NSCalendar alloc]
+                                         initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+                NSDateComponents *components =
+                [gregorian components:(NSCalendarUnitDay |
+                                       NSCalendarUnitMonth|
+                                       NSCalendarUnitHour |
+                                       NSCalendarUnitMinute |
+                                       NSCalendarUnitYear
+                                       ) fromDate:currentDate];
+                [components setDay:day];
+                [components setMonth:month];
+                [components setHour:hour];
+                [components setMinute:minute];
+                NSDate *dateToRevokePriviliges = [gregorian dateFromComponents:components];
+                return ([currentDate compare:dateToRevokePriviliges] == NSOrderedDescending);
+            }
+        }
+    }
+    // in case we don't know time limit -- return YES.
+    return YES;
 }
 
 -(void)installLaunchAgentToRemovePrivileges
