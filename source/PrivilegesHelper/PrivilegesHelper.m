@@ -192,7 +192,7 @@ OSStatus SecTaskValidateForRequirement(SecTaskRef task, CFStringRef requirement)
 
     /* Get the current mode. */
     struct stat buf;
-    int error = stat(path, &buf);
+    stat(path, &buf);
     /* check and handle error */
 
     /* Make the file user-executable. */
